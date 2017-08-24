@@ -31,23 +31,24 @@ namespace SinaWeiboLoginCore
             var encodedUserName = EncodeUserName(_userName);
 
             var preLoginJsonResult = await PreLoginAsync(encodedUserName);
-            var sever_data = JToken.Parse(preLoginJsonResult);
+            var preLoginData = JToken.Parse(preLoginJsonResult);
 
-            var servertime = sever_data["servertime"]?.ToString();
-            var nonce = sever_data["nonce"]?.ToString();
-            var rsakv = sever_data["rsakv"]?.ToString();
-            var pubkey = "0" + sever_data["pubkey"]?.ToString();
-            var showpin = sever_data["showpin"]?.ToString();
-            var pcid = sever_data["pcid"]?.ToString();
+            var serverTime = preLoginData["servertime"]?.ToString();
+            var nonce = preLoginData["nonce"]?.ToString();
+            var rsakv = preLoginData["rsakv"]?.ToString();
+            var pubkey = "0" + preLoginData["pubkey"]?.ToString();
+            var showpin = preLoginData["showpin"]?.ToString();
+            var pcid = preLoginData["pcid"]?.ToString();
 
-            var encodePassword = EncodePassword(_password, servertime, nonce, pubkey);
+            var encodePassword = EncodePassword(_password, serverTime, nonce, pubkey);
 
             var postData = "entry=weibo&gateway=1&from=&savestate=7&useticket=1&vsnf=1&su=" + encodedUserName
-                + "&service=miniblog&servertime=" + servertime
+                + "&service=miniblog&servertime=" + serverTime
                 + "&nonce=" + nonce
                 + "&pwencode=rsa2&rsakv=" + rsakv
                 + "&sp=" + encodePassword
-                + "&sr=1366*768&prelt=282&encoding=UTF-8&url=" + Uri.EscapeDataString("http://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack")
+                + "&sr=" + Uri.EscapeDataString("1366 * 768")
+                + "&prelt=282&encoding=UTF-8&url=" + Uri.EscapeDataString("http://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack")
                 + "&returntype=META";
 
             const string loginUrl = "http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)";
