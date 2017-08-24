@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Dynamic;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -42,17 +43,28 @@ namespace SinaWeiboLoginCore
 
             var encodePassword = EncodePassword(_password, serverTime, nonce, pubkey);
 
-            var postData = "entry=weibo&gateway=1&from=&savestate=7&useticket=1&vsnf=1&su=" + encodedUserName
-                + "&service=miniblog&servertime=" + serverTime
-                + "&nonce=" + nonce
-                + "&pwencode=rsa2&rsakv=" + rsakv
-                + "&sp=" + encodePassword
-                + "&sr=" + Uri.EscapeDataString("1366 * 768")
-                + "&prelt=282&encoding=UTF-8&url=" + Uri.EscapeDataString("http://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack")
-                + "&returntype=META";
-
+            dynamic postObj = new ExpandoObject();
+            postObj.entry = "weibo";
+            postObj.gateway = 1;
+            postObj.from = string.Empty;
+            postObj.savestate = 7;
+            postObj.useticket = 1;
+            postObj.vsnf = 1;
+            postObj.su = encodedUserName;
+            postObj.service = "miniblog";
+            postObj.servertime = serverTime;
+            postObj.nonce = nonce;
+            postObj.pwencode = "rsa2";
+            postObj.rsakv = rsakv;
+            postObj.sp = encodePassword;
+            postObj.sr = "1366*768";
+            postObj.prelt = 282;
+            postObj.encoding = "UTF-8";
+            postObj.url = "http://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack";
+            postObj.returntype = "META";
+            
             const string loginUrl = "http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)";
-            var loginResponse = await _webRequestEx.PostAsync(loginUrl, postData);
+            var loginResponse = await _webRequestEx.PostAsync(loginUrl, postObj);
 
             if (loginResponse.IndexOf("reason=") >= 0)
             {

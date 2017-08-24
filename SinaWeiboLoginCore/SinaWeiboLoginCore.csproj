@@ -9,6 +9,6 @@
     <PackageReference Include="SinaWeiboPasswordEncoder.Abstractions" Version="1.0.0" />
     <PackageReference Include="SinaWeiboPasswordJsEncoder" Version="1.0.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.4.0" />
-    <PackageReference Include="WebRequestExtension" Version="1.0.0" />
+    <PackageReference Include="WebRequestExtension" Version="1.0.1" />
   </ItemGroup>
 </Project>
