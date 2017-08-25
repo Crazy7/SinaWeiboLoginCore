@@ -18,6 +18,7 @@ namespace SinaWeiboLoginCore
         private readonly string _password;
         private readonly CookieContainer _cookieContainer;
         private readonly IWebRequestEx _webRequestEx;
+        private PreLoginData _preLoginDataState;
 
         public string Pin { get; set; }
 
@@ -28,6 +29,7 @@ namespace SinaWeiboLoginCore
 
             _cookieContainer = cookieContainer ?? new CookieContainer();
             _webRequestEx = new WebRequestEx(_cookieContainer);
+            _preLoginDataState = null;
         }
 
         public async Task<CookieContainer> LoginAsync()
@@ -54,6 +56,7 @@ namespace SinaWeiboLoginCore
             var showPin = preLoginData.ServerData.showpin == "1";
             if(showPin && string.IsNullOrEmpty(Pin))
             {
+                _preLoginDataState = preLoginData;
                 throw new SinaPinNotFoundException(preLoginData.ServerData.pcid);
             }
 
@@ -82,6 +85,13 @@ namespace SinaWeiboLoginCore
         
         private async Task<PreLoginData> PreLoginAsync()
         {
+            if (_preLoginDataState != null)
+            {
+                var preLogin = _preLoginDataState;
+                _preLoginDataState = null;
+                return preLogin;
+            }
+
             var userName = EncodeUserName(_userName);
 
             var preLoginJsonResult = await PreLoginAsync(userName);

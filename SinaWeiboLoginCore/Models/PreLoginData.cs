@@ -4,7 +4,7 @@ using System.Text;
 
 namespace SinaWeiboLoginCore.Models
 {
-    struct PreLoginData
+    class PreLoginData
     {
         public string UserName { get; set; }
 
