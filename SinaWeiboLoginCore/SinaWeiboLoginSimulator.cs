@@ -6,6 +6,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using SinaWeiboLoginCore.Exceptions;
+using SinaWeiboLoginCore.Models;
 using SinaWeiboPasswordJsEncoder;
 using WebRequestExtension;
 
@@ -153,15 +154,6 @@ namespace SinaWeiboLoginCore
             var match = reg.Match(response);
 
             return match.Success ? match.Groups[1].Value : null;
-        }
-
-        private struct PreLoginData
-        {
-            public string UserName { get; set; }
-
-            public string Password { get; set; }
-
-            public dynamic ServerData { get; set; }
         }
     }
 }
