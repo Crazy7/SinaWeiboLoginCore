@@ -23,6 +23,8 @@ namespace SinaWeiboLoginCore
 
         public string Pin { get; set; }
 
+        public CookieContainer CookieContainer => _cookieContainer;
+
         public SinaWeiboLoginSimulator(string userName, string password, CookieContainer cookieContainer = null)
         {
             _userName = userName;
@@ -49,7 +51,7 @@ namespace SinaWeiboLoginCore
             var redirectUrl = GetLoginRedirectUrl(loginResponse);
             await _webRequestEx.GetAsync(redirectUrl);
 
-            return _cookieContainer;
+            return CookieContainer;
         }
 
         public async Task<string> RefreshPinImageAsync()
