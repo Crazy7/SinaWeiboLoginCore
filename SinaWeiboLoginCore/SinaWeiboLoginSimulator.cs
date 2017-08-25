@@ -18,6 +18,8 @@ namespace SinaWeiboLoginCore
         private readonly CookieContainer _cookieContainer;
         private readonly IWebRequestEx _webRequestEx;
 
+        public string Pin { get; set; }
+
         public SinaWeiboLoginSimulator(string userName, string password, CookieContainer cookieContainer = null)
         {
             _userName = userName;
@@ -48,6 +50,12 @@ namespace SinaWeiboLoginCore
 
         private dynamic PreparePostBodyForLogin(PreLoginData preLoginData)
         {
+            var showPin = preLoginData.ServerData.showpin == "1";
+            if(showPin && string.IsNullOrEmpty(Pin))
+            {
+                throw new SinaPinNotFoundException(preLoginData.ServerData.pcid);
+            }
+
             dynamic postObj = new ExpandoObject();
             postObj.entry = "weibo";
             postObj.gateway = 1;
