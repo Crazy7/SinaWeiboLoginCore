@@ -29,40 +29,9 @@ namespace SinaWeiboLoginCore
 
         public async Task<CookieContainer> LoginAsync()
         {
-            var encodedUserName = EncodeUserName(_userName);
+            var preLoginResult = await PreLoginAsync();
+            var postObj = PreparePostBodyForLogin(preLoginResult);
 
-            var preLoginJsonResult = await PreLoginAsync(encodedUserName);
-            var preLoginData = JToken.Parse(preLoginJsonResult);
-
-            var serverTime = preLoginData["servertime"]?.ToString();
-            var nonce = preLoginData["nonce"]?.ToString();
-            var rsakv = preLoginData["rsakv"]?.ToString();
-            var pubkey = "0" + preLoginData["pubkey"]?.ToString();
-            var showpin = preLoginData["showpin"]?.ToString();
-            var pcid = preLoginData["pcid"]?.ToString();
-
-            var encodePassword = EncodePassword(_password, serverTime, nonce, pubkey);
-
-            dynamic postObj = new ExpandoObject();
-            postObj.entry = "weibo";
-            postObj.gateway = 1;
-            postObj.from = string.Empty;
-            postObj.savestate = 7;
-            postObj.useticket = 1;
-            postObj.vsnf = 1;
-            postObj.su = encodedUserName;
-            postObj.service = "miniblog";
-            postObj.servertime = serverTime;
-            postObj.nonce = nonce;
-            postObj.pwencode = "rsa2";
-            postObj.rsakv = rsakv;
-            postObj.sp = encodePassword;
-            postObj.sr = "1366*768";
-            postObj.prelt = 282;
-            postObj.encoding = "UTF-8";
-            postObj.url = "http://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack";
-            postObj.returntype = "META";
-            
             const string loginUrl = "http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)";
             var loginResponse = await _webRequestEx.PostAsync(loginUrl, postObj);
 
@@ -77,21 +46,54 @@ namespace SinaWeiboLoginCore
             return _cookieContainer;
         }
 
-
-        private static string EncodeUserName(string userName)
+        private dynamic PreparePostBodyForLogin(PreLoginData preLoginData)
         {
-            var encoded = Uri.EscapeDataString(userName);
-            var bytes = Encoding.UTF8.GetBytes(encoded);
-            var base64 = Convert.ToBase64String(bytes);
+            dynamic postObj = new ExpandoObject();
+            postObj.entry = "weibo";
+            postObj.gateway = 1;
+            postObj.from = string.Empty;
+            postObj.savestate = 7;
+            postObj.useticket = 1;
+            postObj.vsnf = 1;
+            postObj.su = preLoginData.UserName;
+            postObj.service = "miniblog";
+            postObj.servertime = preLoginData.ServerData.serverTime;
+            postObj.nonce = preLoginData.ServerData.nonce;
+            postObj.pwencode = "rsa2";
+            postObj.rsakv = preLoginData.ServerData.rsakv;
+            postObj.sp = preLoginData.Password;
+            postObj.sr = "1366*768";
+            postObj.prelt = 282;
+            postObj.encoding = "UTF-8";
+            postObj.url = "http://weibo.com/ajaxlogin.php?framelogin=1&callback=parent.sinaSSOController.feedBackUrlCallBack";
+            postObj.returntype = "META";
 
-            return base64;
+            return postObj;
         }
-
-        private static string EncodePassword(string password, string serverTime, string nonce, string pubKey)
+        
+        private async Task<PreLoginData> PreLoginAsync()
         {
-            var jsEncoder = new JsEncoder();
-            var encodedPwd = jsEncoder.EncodePassword(password, serverTime, nonce, pubKey);
-            return encodedPwd;
+            var userName = EncodeUserName(_userName);
+
+            var preLoginJsonResult = await PreLoginAsync(userName);
+            var preLoginData = JToken.Parse(preLoginJsonResult);
+
+            dynamic serverData = new ExpandoObject();
+            serverData.serverTime = preLoginData["servertime"]?.ToString();
+            serverData.nonce = preLoginData["nonce"]?.ToString();
+            serverData.rsakv = preLoginData["rsakv"]?.ToString();
+            serverData.pubkey = "0" + preLoginData["pubkey"]?.ToString();
+            serverData.showpin = preLoginData["showpin"]?.ToString();
+            serverData.pcid = preLoginData["pcid"]?.ToString();
+
+            var data = new PreLoginData
+            {
+                UserName = userName,
+                Password = EncodePassword(_password, serverData.serverTime, serverData.nonce, serverData.pubkey),
+                ServerData = serverData
+            };
+
+            return data;
         }
 
         public async Task<string> PreLoginAsync(string userName)
@@ -113,6 +115,22 @@ namespace SinaWeiboLoginCore
             return responseText.Substring(start, end - start + 1);
         }
 
+        private static string EncodeUserName(string userName)
+        {
+            var encoded = Uri.EscapeDataString(userName);
+            var bytes = Encoding.UTF8.GetBytes(encoded);
+            var base64 = Convert.ToBase64String(bytes);
+
+            return base64;
+        }
+
+        private static string EncodePassword(string password, string serverTime, string nonce, string pubKey)
+        {
+            var jsEncoder = new JsEncoder();
+            var encodedPwd = jsEncoder.EncodePassword(password, serverTime, nonce, pubKey);
+            return encodedPwd;
+        }
+
         private static int GetTimestamp()
         {
             var epoic = new DateTime(1970, 1, 1);
@@ -127,6 +145,15 @@ namespace SinaWeiboLoginCore
             var match = reg.Match(response);
 
             return match.Success ? match.Groups[1].Value : null;
+        }
+
+        private struct PreLoginData
+        {
+            public string UserName { get; set; }
+
+            public string Password { get; set; }
+
+            public dynamic ServerData { get; set; }
         }
     }
 }
