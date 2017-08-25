@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using SinaWeiboLoginCore.Exceptions;
 using SinaWeiboLoginCore.Models;
+using SinaWeiboLoginCore.Utilities;
 using SinaWeiboPasswordJsEncoder;
 using WebRequestExtension;
 
@@ -49,6 +50,13 @@ namespace SinaWeiboLoginCore
             await _webRequestEx.GetAsync(redirectUrl);
 
             return _cookieContainer;
+        }
+
+        public async Task<string> RefreshPinImageAsync()
+        {
+            _preLoginDataState = await PreLoginAsync();
+
+            return SinaWeiboUtility.GeneratePinImageUrl(_preLoginDataState.ServerData.pcid);
         }
 
         private dynamic PreparePostBodyForLogin(PreLoginData preLoginData)
